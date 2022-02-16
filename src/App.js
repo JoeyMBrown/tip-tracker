@@ -1,8 +1,10 @@
-import './App.css';
 import React, { useState, useEffect } from 'react';
 import OrderForm from './components/OrderForm.js';
 import ShiftTotals from './components/ShiftTotals';
 import TipTable from './components/TipTable';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import GasInfo from './components/GasInfo';
 
 function App() {
 
@@ -14,8 +16,8 @@ function App() {
   };
 
   const shiftTotalsInitialValues = {
-    startingMiles: '',
-    endingMiles: '',
+    startingMiles: 0,
+    endingMiles: 0,
     milesUsedDuringShift: 0,
     shiftStarted: false,
     shiftEnded: false
@@ -35,16 +37,21 @@ function App() {
   })
 
   useEffect(() => {
-    //localStorage.clear();
     const orderTotals = localStorage.getItem('orderTotals');
+    const shiftTotals = localStorage.getItem('shiftTotals');
     if(orderTotals) {
       setOrderTotals(JSON.parse(orderTotals));
+    }
+
+    if(shiftTotals) {
+      setShiftTotals(JSON.parse(shiftTotals));
     }
   },[])
 
   useEffect(() => {
     localStorage.setItem('orderTotals', JSON.stringify(orderTotals));
-  },[orderTotals])
+    localStorage.setItem('shiftTotals', JSON.stringify(shiftTotals));
+  },[orderTotals, shiftTotals])
 
   function updateOrder(e) {
     const { name } = e.target;
@@ -104,18 +111,26 @@ function App() {
     }
 
     setOrder(orderInitialValues);
-    //console.log(orderTotals)
   }
 
   function updateShiftTotals(e) {
     const { name } = e.target;
     let mileRange = window.prompt('Enter the mile range of you car at the beginning of your shift.');
 
+    if(!Number(mileRange)) {
+      window.alert('Please enter a valid number response');
+      return;
+    }
+
     return setShiftTotals({...shiftTotals, [name]: mileRange, shiftStarted: true});
   }
 
   function endShift() {
       let mileRange = window.prompt('Enter the mile range left at the end of your shift.')
+      if(!Number(mileRange)) {
+        window.alert('Please enter a valid number response');
+        return;
+      }
 
       const totalMiles = Number(shiftTotals.startingMiles) - Number(mileRange);
       return setShiftTotals({ ...shiftTotals, milesUsedDuringShift: totalMiles, shiftEnded: true, 'endingMiles': mileRange });
@@ -131,9 +146,12 @@ function App() {
 
   return (
     <div>
-      <OrderForm updateOrder={updateOrder} updateTip={updateTip} onSubmit={onSubmit} order={order} />
-      <TipTable orderTotals={orderTotals} />  
-      <ShiftTotals shiftTotals={shiftTotals} updateShiftTotals={updateShiftTotals} endShift={endShift} resetShift={resetShift} />
+      <Header />
+        <OrderForm updateOrder={updateOrder} updateTip={updateTip} onSubmit={onSubmit} order={order} />
+        <TipTable orderTotals={orderTotals} />  
+        <GasInfo gasTotals={shiftTotals} />
+        <ShiftTotals shiftTotals={shiftTotals} updateShiftTotals={updateShiftTotals} endShift={endShift} resetShift={resetShift} />
+      <Footer />
     </div>
   );
 }
